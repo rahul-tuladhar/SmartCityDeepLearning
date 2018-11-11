@@ -1,5 +1,7 @@
 # SmartCityDeepLearning
 
+This repo holds scripts to generate simulation data from [SUMO](http://sumo.dlr.de/wiki). 
+
 ## Installing [SUMO](http://sumo.dlr.de/wiki/Installing)
  Follow the instructions listed below
 > There are four different binary packages for Windows depending on the platform (32 vs. 64 bit) you have and what you want to do with SUMO. If you want to install it locally and have administrator rights on your machine you should download and execute one of the installers (preferably 64 bit). If you need a "portable" version or do not have admin rights, use the correct zip, extract it into a desired folder using 7Zip, Winzip, or a similar tool. Every package contains the binaries, all dlls needed, the examples, tools, and documentation in HTML format.
@@ -15,13 +17,13 @@
 >
 >For building SUMO from source see building SUMO under Windows. 
 
-# 2018-10-28-14-39-53 
+## 2018-10-28-14-39-53 
 This file holds a generated New York City map and corresponding `.xml` files. 
 Use `python runner.py` within the directory in order to run the corresponding generated map file.
 
 
 
-# Troubleshooting 
+## Troubleshooting 
  List of errors encountered:
   - If there are import errors such as `module traci not found` make sure in your `system variables` that `SUMO_HOME` does not have any trailing semicolons `;` otherwise when concatenating the path in `tools = os.path.join(os.environ['SUMO_HOME'], 'tools')` that tools will not be concatentated into the right string. Example: `C:\user\Sumo\;\tools` 
  
