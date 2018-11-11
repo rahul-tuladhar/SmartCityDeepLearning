@@ -23,7 +23,13 @@ This repo holds scripts to generate simulation data from [SUMO](http://sumo.dlr.
 This file holds a generated New York City map and corresponding `.xml` files. 
 Use `python runner.py` within the directory in order to run the corresponding generated map file.
 
+## 2018-11-11-13-13-48-45
+This file holds a different generated New York City map and corresponding `.xml` files. 
+Use `python runner.py` within the directory in order to run the corresponding generated map file.
 
+## Runner.py
+
+This script is used to run the `.osm` file and output the simulation data.
 
 ## Troubleshooting 
  List of errors encountered:
