@@ -2,6 +2,8 @@
 
 This repo holds scripts to generate simulation data from [SUMO](http://sumo.dlr.de/wiki). 
 
+[Useful python functions for getting TraCI data](file:///C:/Users/rahul/Sumo/doc/pydoc/traci.html)
+
 ## Installing [SUMO](http://sumo.dlr.de/wiki/Installing)
  Follow the instructions listed below
 > There are four different binary packages for Windows depending on the platform (32 vs. 64 bit) you have and what you want to do with SUMO. If you want to install it locally and have administrator rights on your machine you should download and execute one of the installers (preferably 64 bit). If you need a "portable" version or do not have admin rights, use the correct zip, extract it into a desired folder using 7Zip, Winzip, or a similar tool. Every package contains the binaries, all dlls needed, the examples, tools, and documentation in HTML format.
