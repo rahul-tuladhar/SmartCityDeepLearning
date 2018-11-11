@@ -19,6 +19,13 @@ This repo holds scripts to generate simulation data from [SUMO](http://sumo.dlr.
 >
 >For building SUMO from source see building SUMO under Windows. 
 
+## Running SUMO
+
+After installing SUMO and setting up the `SUMO_HOME` system variable accordingly, you can run the generated file using the `runner.py` file.
+Make sure you are within the correct directory where `runner.py` is in. From that directory, you can run:
+```python runner.py```
+A SUMO window should appear, you can click the 'run' button at the top to start the simulation. Output can be visible in the console.
+ 
 ## 2018-10-28-14-39-53 
 This file holds a generated New York City map and corresponding `.xml` files. 
 Use `python runner.py` within the directory in order to run the corresponding generated map file.
