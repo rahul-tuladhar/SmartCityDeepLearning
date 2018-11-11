@@ -16,11 +16,17 @@ from sumolib import checkBinary
 import traci  
 import traci.constants as tc
 import subprocess
+import sumolib
 
+f = open("edge_ids.txt","w")
 
-if __name__ == "__main__":
+for edge in sumolib.output.parse_fast("osm.net.xml", 'edge', ['id']):
+  f.write(edge)
+  print(edge)
+f.close()
+#if __name__ == "__main__":
 
-    sumoBinary = checkBinary('sumo-gui')
+    #sumoBinary = checkBinary('sumo-gui')
 
     # net = 'osm.net.xml'
     # subprocess.call([checkBinary('netconvert'),
@@ -28,7 +34,7 @@ if __name__ == "__main__":
     #                 stdout=sys.stdout, stderr=sys.stderr)
 
 
-    traci.start([sumoBinary, "-c", "osm.sumocfg"])
+    #traci.start([sumoBinary, "-c", "osm.sumocfg"])
     # while traci.simulation.getMinExpectedNumber() > 0: 
     #    for veh_id in traci.vehicle.getIDList():
     #         position = traci.vehicle.getSpeed(veh_id)
@@ -42,18 +48,16 @@ if __name__ == "__main__":
     #        print(positions)
     #    traci.simulationStep()
 
-    step = 0
-    lane_ID = ":1251605762_w0"
-    while step < 100:
-      traci.simulationStep()
-      co = traci.edge.getCOEmission(lane_ID)
-      noise = traci.edge.getNoiseEmission(lane_ID)
-      num_veh = traci.edge.getLastStepVehicleNumber(lane_ID)
-      ped = traci.edge.getLastStepPersonIDs(lane_ID)
-      print(co)
-      # Q1: Not sure how to get a list of edges? Is there some way to connect osm.net.xml
-      # Q2: signal cannot be directly derived - a lane may have multiple junctions 
-      # - do we want data from juctions of that lane instead? 
-      
-      step += 1
-    traci.close()
+
+
+    # step = 0
+    # lane_ID = ":1251605762_w0"
+    # while step < 100:
+    #   traci.simulationStep()
+    #   co = traci.edge.getCOEmission(lane_ID)
+    #   noise = traci.edge.getNoiseEmission(lane_ID)
+    #   num_veh = traci.edge.getLastStepVehicleNumber(lane_ID)
+    #   ped = traci.edge.getLastStepPersonIDs(lane_ID)
+    #   print(co)      
+    #   step += 1
+    # traci.close()
