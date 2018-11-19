@@ -5,6 +5,7 @@ import os, sys
 import optparse
 import random
 
+# Sets up the right 
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     #        print(positions)
     #    traci.simulationStep()
     edges = [e for e in sumolib.output.parse_fast("osm.net.xml", 'edge', ['id'])]
-
+    lanes = [l for l in sumolib.output.parse_fast('osm.net.xml', 'lane', ['id'])]
     step = 0
     
     while step < 100:
