@@ -64,30 +64,48 @@ for e in edges:
 f.close()
 """
 
+if __name__ == "__main__":
 
+    sumoBinary = checkBinary('sumo')
 
+    traci.start([sumoBinary, "-c", "osm.sumocfg"])
 
-# if __name__ == "__main__":
-
-#     sumoBinary = checkBinary('sumo-gui')
-
-#     traci.start([sumoBinary, "-c", "osm.sumocfg"])
-
-#     step = 0
+    step = 0
     
-#     while step < 100:
-#         traci.simulationStep()
+    while step < 1000:
+        traci.simulationStep()
       
-#         if step % 10 == 0:
+        if step % 10 == 0:
+            #for e in edges:
+                # edge_id = e.getID()
+                # co = traci.edge.getCOEmission(edge_id)
+                # co2 = traci.edge.getCO2Emission(edge_id)
+                # noise = traci.edge.getNoiseEmission(edge_id)
+                # num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
+                # ped = traci.edge.getLastStepPersonIDs(edge_id) 
+                               
+                # filename = str(edge_id)+".txt"
+                # f = open(filename,"a")
+                # f.write(str(step)+"|")
+                # f.write(str(co)+"|")
+                # f.write(str(co2)+"|")
+                # f.write(str(noise)+"|")
+                # f.write(str(num_veh)+"|")
+                # f.write(str(ped)+"\n")
+                # f.close()
+                # print(str(step)+": "+str(edge_id)+" is done.")
+        
+            t_id = tl[0].getID()
+            phase = traci.trafficlight.getPhase(t_id)
+            definition = traci.trafficlight.getCompleteRedYellowGreenDefinition(t_id)
+            state = traci.trafficlight.getRedYellowGreenState(t_id)
+            switch = traci.trafficlight.getNextSwitch(t_id)
+           # print(str(t_id)+" has switch "+str(switch))
+            print(str(step))
+            print(str(t_id)+" has state "+str(state))
+            print(str(t_id)+" has phase "+str(phase))
+            
+        step += 1
 
-#             for e in edges:
-#                 lane_ID = e.id
-#                 co = traci.edge.getCOEmission(lane_ID)
-#                 noise = traci.edge.getNoiseEmission(lane_ID)
-#                 num_veh = traci.edge.getLastStepVehicleNumber(lane_ID)
-#                 ped = traci.edge.getLastStepPersonIDs(lane_ID)
-#                 print("Step: " + str(step) +  "Edge ID: " + e.id + " CO Emission: " + str(co))
-#         step += 1
-
-#     traci.close()
+    traci.close()
 
