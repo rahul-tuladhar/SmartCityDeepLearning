@@ -65,7 +65,9 @@ for e in edges:
     f.write(str(net.getNode(nextNodeID).getCoord())+'\n')
 f.close()
 """
+
 def get_edge_data(edge):
+    # numerical data per edge
     edge_id = edge.getID()
     street_name = traci.edge.getStreetName(edge_id)
     co = traci.edge.getCOEmission(edge_id)
@@ -79,6 +81,7 @@ def get_edge_data(edge):
     return data
 
 def get_tl_data(tl):
+    # string format is necessary to view in stdout
     t_id = tl.getID()
     phase = str(traci.trafficlight.getPhase(t_id))
     state = str(traci.trafficlight.getRedYellowGreenState(t_id))
@@ -86,6 +89,24 @@ def get_tl_data(tl):
     data = [phase, state, switch]
     return data    
 
+def write_data_to_file(path, data_id, df, data_type, step):
+    #   path: where to save the files
+    #   data_filename: name of kind of data; edge, tl, etc
+    #   df: dataframe 
+    #   data_type: type_data
+    #   step: time interval in ticks
+
+    # construct file
+    file_name = path + '_' + str(data_type) + '_' + str(data_id) + '.csv'
+    with open(file_name, 'a') as f:
+        df['step'] = step
+        print(file_name)
+        print(data_id)
+        print(df)    
+        df.to_csv(file_name, sep='\t')
+    # print("Wrote data to file!")
+    return 
+        # f.write()
 if __name__ == "__main__":
 
     sumoBinary = checkBinary('sumo')
@@ -93,20 +114,43 @@ if __name__ == "__main__":
     traci.start(sumo_cmd)
 
     step = 0
+
+    # path parameters
+    datafile_path = os.path.dirname(os.path.abspath(__file__)) + '\edge_data'
+    if not os.path.exists(datafile_path):
+        os.makedirs(datafile_path)
+
     print("Starting Simulation...")
     while step < 1000:
         traci.simulationStep()
         step_data = []
         if step % 10 == 0:
             print("Step: %d" % step)
-            edge_data = {'edge id':['street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission']}
+            edge_data = {}
             print("Getting edge data...")
             # Create the data per edge
             for e in edges:
                 edge_id = e.getID()
                 edge_data[edge_id] = get_edge_data(e)
-            edge_df = pd.DataFrame.from_dict(edge_data, orient='index')    
-            print(edge_df)
+            edge_df = pd.DataFrame.from_dict(edge_data, orient='index')
+
+            edge_df.columns =['street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
+
+            # print(edge_df)
+            # print(datafile_path)
+            for index, row in edge_df.iterrows():
+                # print(edge_df[col])
+                # print(index)
+                # print(row[:])
+            # for e in edges:
+            #     edge_id = e.getID()
+            #     print(edge_df[edge_id])
+                write_data_to_file(datafile_path, index, row[:], 'edge', step)
+            
+
+
+
+
 
             print("Getting tl data...")
             # state_data = getStateData()
@@ -115,7 +159,7 @@ if __name__ == "__main__":
                 t_id = t.getID()
                 tl_data[t_id] = get_tl_data(t)
             tl_df = pd.DataFrame.from_dict(tl_data, orient='index')
-            print(tl_df)
+            # print(tl_df)
 
 
             # traci.edge.subscribe(vehID, (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION))
