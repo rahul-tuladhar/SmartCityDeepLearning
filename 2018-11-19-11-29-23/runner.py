@@ -65,8 +65,26 @@ for e in edges:
     f.write(str(net.getNode(nextNodeID).getCoord())+'\n')
 f.close()
 """
-# def getEdgeData():
-    
+def get_edge_data(edge):
+    edge_id = edge.getID()
+    street_name = traci.edge.getStreetName(edge_id)
+    co = traci.edge.getCOEmission(edge_id)
+    co2 = traci.edge.getCO2Emission(edge_id)
+    noise = traci.edge.getNoiseEmission(edge_id)
+    num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
+    ped = traci.edge.getLastStepPersonIDs(edge_id) 
+    hc_emission = traci.edge.getHCEmission(edge_id)
+    nox_emission = traci.edge.getNOxEmission(edge_id)
+    data = [street_name, co, co2, noise, num_veh, ped, hc_emission, nox_emission]
+    return data
+
+def get_tl_data(tl):
+    t_id = tl.getID()
+    phase = str(traci.trafficlight.getPhase(t_id))
+    state = str(traci.trafficlight.getRedYellowGreenState(t_id))
+    switch = str(traci.trafficlight.getNextSwitch(t_id))
+    data = [phase, state, switch]
+    return data    
 
 if __name__ == "__main__":
 
@@ -82,35 +100,22 @@ if __name__ == "__main__":
         if step % 10 == 0:
             print("Step: %d" % step)
             edge_data = {'edge id':['street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission']}
+            print("Getting edge data...")
             # Create the data per edge
             for e in edges:
                 edge_id = e.getID()
-                co = traci.edge.getCOEmission(edge_id)
-                co2 = traci.edge.getCO2Emission(edge_id)
-                noise = traci.edge.getNoiseEmission(edge_id)
-                num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
-                ped = traci.edge.getLastStepPersonIDs(edge_id) 
-                hc_emission = traci.edge.getHCEmission(edge_id)
-                nox_emission = traci.edge.getNOxEmission(edge_id)
-                street_name = traci.edge.getStreetName(edge_id)
-                data = [street_name,co,co2,noise,num_veh,ped,hc_emission,nox_emission]
-                edge_data[edge_id] = data
-            edge_data = pd.DataFrame.from_dict(edge_data, orient='index')
-            print (edge_data)
+                edge_data[edge_id] = get_edge_data(e)
+            edge_df = pd.DataFrame.from_dict(edge_data, orient='index')    
+            print(edge_df)
 
-            edge_data= getEdgeData()
-            state_data = getStateData()
+            print("Getting tl data...")
+            # state_data = getStateData()
             tl_data = {'t_id': ['phase', 'state', 'switch']}
             for t in tl:
                 t_id = t.getID()
-                phase = str(traci.trafficlight.getPhase(t_id))
-                # definition = str(traci.trafficlight.getCompleteRedYellowGreenDefinition(t_id))
-                state = str(traci.trafficlight.getRedYellowGreenState(t_id))
-                switch = str(traci.trafficlight.getNextSwitch(t_id))
-                data = [phase, state, switch]
-                tl_data[t_id] = data
-            tl_data = pd.DataFrame.from_dict(tl_data, orient='index')
-            print(tl_data)
+                tl_data[t_id] = get_tl_data(t)
+            tl_df = pd.DataFrame.from_dict(tl_data, orient='index')
+            print(tl_df)
 
 
             # traci.edge.subscribe(vehID, (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION))
