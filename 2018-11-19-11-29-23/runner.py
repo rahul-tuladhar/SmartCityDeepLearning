@@ -5,7 +5,7 @@ import os, sys
 import optparse
 import random
 
-# Sets up the right 
+# Declares necessary path for SUMO_HOME variable
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -18,6 +18,8 @@ import traci
 import traci.constants as tc
 import subprocess
 import sumolib
+import numpy as np
+import pandas as pd
 
 net = sumolib.net.readNet('osm.net.xml')
 edges = net.getEdges()
@@ -63,47 +65,60 @@ for e in edges:
     f.write(str(net.getNode(nextNodeID).getCoord())+'\n')
 f.close()
 """
+# def getEdgeData():
+    
 
 if __name__ == "__main__":
 
     sumoBinary = checkBinary('sumo')
-
-    traci.start([sumoBinary, "-c", "osm.sumocfg"])
+    sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
+    traci.start(sumo_cmd)
 
     step = 0
-    
+    print("Starting Simulation...")
     while step < 1000:
         traci.simulationStep()
-      
+        step_data = []
         if step % 10 == 0:
-            #for e in edges:
-                # edge_id = e.getID()
-                # co = traci.edge.getCOEmission(edge_id)
-                # co2 = traci.edge.getCO2Emission(edge_id)
-                # noise = traci.edge.getNoiseEmission(edge_id)
-                # num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
-                # ped = traci.edge.getLastStepPersonIDs(edge_id) 
-                               
-                # filename = str(edge_id)+".txt"
-                # f = open(filename,"a")
-                # f.write(str(step)+"|")
-                # f.write(str(co)+"|")
-                # f.write(str(co2)+"|")
-                # f.write(str(noise)+"|")
-                # f.write(str(num_veh)+"|")
-                # f.write(str(ped)+"\n")
-                # f.close()
-                # print(str(step)+": "+str(edge_id)+" is done.")
-        
-            t_id = tl[0].getID()
-            phase = traci.trafficlight.getPhase(t_id)
-            definition = traci.trafficlight.getCompleteRedYellowGreenDefinition(t_id)
-            state = traci.trafficlight.getRedYellowGreenState(t_id)
-            switch = traci.trafficlight.getNextSwitch(t_id)
-           # print(str(t_id)+" has switch "+str(switch))
-            print(str(step))
-            print(str(t_id)+" has state "+str(state))
-            print(str(t_id)+" has phase "+str(phase))
+            print("Step: %d" % step)
+            edge_data = {'edge id':['street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission']}
+            # Create the data per edge
+            for e in edges:
+                edge_id = e.getID()
+                co = traci.edge.getCOEmission(edge_id)
+                co2 = traci.edge.getCO2Emission(edge_id)
+                noise = traci.edge.getNoiseEmission(edge_id)
+                num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
+                ped = traci.edge.getLastStepPersonIDs(edge_id) 
+                hc_emission = traci.edge.getHCEmission(edge_id)
+                nox_emission = traci.edge.getNOxEmission(edge_id)
+                street_name = traci.edge.getStreetName(edge_id)
+                data = [street_name,co,co2,noise,num_veh,ped,hc_emission,nox_emission]
+                edge_data[edge_id] = data
+            edge_data = pd.DataFrame.from_dict(edge_data, orient='index')
+            print (edge_data)
+
+            edge_data= getEdgeData()
+            state_data = getStateData()
+            tl_data = {'t_id': ['phase', 'state', 'switch']}
+            for t in tl:
+                t_id = t.getID()
+                phase = str(traci.trafficlight.getPhase(t_id))
+                # definition = str(traci.trafficlight.getCompleteRedYellowGreenDefinition(t_id))
+                state = str(traci.trafficlight.getRedYellowGreenState(t_id))
+                switch = str(traci.trafficlight.getNextSwitch(t_id))
+                data = [phase, state, switch]
+                tl_data[t_id] = data
+            tl_data = pd.DataFrame.from_dict(tl_data, orient='index')
+            print(tl_data)
+
+
+            # traci.edge.subscribe(vehID, (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION))
+            # print(traci.vehicle.getSubscriptionResults(vehID))
+           # # print(str(t_id)+" has switch "+str(switch))
+           #  print(str(step))
+           #  print(str(t_id)+" has state "+str(state))
+           #  print(str(t_id)+" has phase "+str(phase))
             
         step += 1
 
