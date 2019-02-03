@@ -97,54 +97,66 @@ def write_data_to_file(path, data_id, df, data_type, step):
     #   step: time interval in ticks
 
     # construct file
-    file_name = path + '_' + str(data_type) + '_' + str(data_id) + '.csv'
-    with open(file_name, 'a') as f:
-        df['step'] = step
-        print(file_name)
-        print(data_id)
-        print(df)    
-        df.to_csv(file_name, sep='\t')
+    suffix = '.csv'
+    file_name = str(data_id) + '_' + str(data_type)
+    destination_path = os.path.join(path, file_name + suffix)
+    # print("Destination path " + destination_path)
+    with open(destination_path, 'a') as f:
+        # print(file_name)
+        # print(data_id)
+        # print(df)    
+        print(df.T)
+        df = pd.DataFrame(df).T
+        df.to_csv(destination_path, header=False, mode='a', index=False)
     # print("Wrote data to file!")
     return 
-        # f.write()
+
 if __name__ == "__main__":
 
+    # Sumo init
     sumoBinary = checkBinary('sumo')
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
-
     step = 0
 
+
     # path parameters
-    datafile_path = os.path.dirname(os.path.abspath(__file__)) + '\edge_data'
+    dir_name = '\edge_data' 
+    datafile_path = os.path.dirname(os.path.abspath(__file__)) + dir_name
+
     if not os.path.exists(datafile_path):
         os.makedirs(datafile_path)
-
+    print(datafile_path)
     print("Starting Simulation...")
+
+    # Ticks for simulation
     while step < 1000:
         traci.simulationStep()
         step_data = []
+        num_entries = 10
         if step % 10 == 0:
             print("Step: %d" % step)
             edge_data = {}
             print("Getting edge data...")
+
             # Create the data per edge
-            for e in edges:
+            for e in edges[:num_entries]:
                 edge_id = e.getID()
                 edge_data[edge_id] = get_edge_data(e)
+
             edge_df = pd.DataFrame.from_dict(edge_data, orient='index')
+            edge_df.insert(0,'step', step)
+            print(edge_df)
+            edge_df.columns =['step', 'street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
 
-            edge_df.columns =['street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
-
-            # print(edge_df)
-            # print(datafile_path)
-            for index, row in edge_df.iterrows():
-                # print(edge_df[col])
-                # print(index)
-                # print(row[:])
-            # for e in edges:
-            #     edge_id = e.getID()
-            #     print(edge_df[edge_id])
+            print(edge_df[:num_entries])
+            for index, row in edge_df[:num_entries].iterrows():
+            #     # print(edge_df[col])
+            #     # print(index)
+            #     # print(row[:])
+            # # for e in edges:
+            # #     edge_id = e.getID()
+            # #     print(edge_df[edge_id])
                 write_data_to_file(datafile_path, index, row[:], 'edge', step)
             
 
