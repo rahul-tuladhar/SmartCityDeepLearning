@@ -96,19 +96,12 @@ def write_data_to_file(path, data_id, df, data_type, step):
     #   data_type: type_data
     #   step: time interval in ticks
 
-    # construct file
     suffix = '.csv'
     file_name = str(data_id) + '_' + str(data_type)
     destination_path = os.path.join(path, file_name + suffix)
-    # print("Destination path " + destination_path)
     with open(destination_path, 'a') as f:
-        # print(file_name)
-        # print(data_id)
-        # print(df)    
-        print(df.T)
         df = pd.DataFrame(df).T
-        df.to_csv(destination_path, header=False, mode='a', index=False)
-    # print("Wrote data to file!")
+        df.to_csv(destination_path, header=False, mode='a', index=False, )
     return 
 
 if __name__ == "__main__":
@@ -118,24 +111,31 @@ if __name__ == "__main__":
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
     step = 0
-
+    total_steps = 10000
 
     # path parameters
     dir_name = '\edge_data' 
     datafile_path = os.path.dirname(os.path.abspath(__file__)) + dir_name
 
+    tl_dir_name = '\tl_data'
+    tl_datafile_path = os.path.dirname(os.path.abspath(__file__)) + tl_dir_name
+
     if not os.path.exists(datafile_path):
         os.makedirs(datafile_path)
+
+    if not os.path.exists(tl_datafile_path):
+        os.makedirs(tl_datafile_path)
+
     print(datafile_path)
     print("Starting Simulation...")
 
     # Ticks for simulation
-    while step < 1000:
+    while step < total_steps:
         traci.simulationStep()
         step_data = []
         num_entries = 10
         if step % 10 == 0:
-            print("Step: %d" % step)
+            print("Step: %d / %d " % (step, total_steps))
             edge_data = {}
             print("Getting edge data...")
 
@@ -146,41 +146,22 @@ if __name__ == "__main__":
 
             edge_df = pd.DataFrame.from_dict(edge_data, orient='index')
             edge_df.insert(0,'step', step)
-            print(edge_df)
-            edge_df.columns =['step', 'street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
+            edge_df.columns = ['step', 'street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
 
-            print(edge_df[:num_entries])
             for index, row in edge_df[:num_entries].iterrows():
-            #     # print(edge_df[col])
-            #     # print(index)
-            #     # print(row[:])
-            # # for e in edges:
-            # #     edge_id = e.getID()
-            # #     print(edge_df[edge_id])
-                write_data_to_file(datafile_path, index, row[:], 'edge', step)
-            
-
-
-
-
+                write_data_to_file(datafile_path, index, row, 'edge', step)
 
             print("Getting tl data...")
-            # state_data = getStateData()
             tl_data = {'t_id': ['phase', 'state', 'switch']}
             for t in tl:
                 t_id = t.getID()
                 tl_data[t_id] = get_tl_data(t)
             tl_df = pd.DataFrame.from_dict(tl_data, orient='index')
-            # print(tl_df)
+            tl_df.insert(0,'step', step)
+            tl_df.columns = ['step', 'phase', 'state', 'switch']
+            for index, row in tl_df[:num_entries].iterrows():
+                write_data_to_file(tl_datafile_path, index, row, 'tl', step)
 
-
-            # traci.edge.subscribe(vehID, (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION))
-            # print(traci.vehicle.getSubscriptionResults(vehID))
-           # # print(str(t_id)+" has switch "+str(switch))
-           #  print(str(step))
-           #  print(str(t_id)+" has state "+str(state))
-           #  print(str(t_id)+" has phase "+str(phase))
-            
         step += 1
 
     traci.close()
