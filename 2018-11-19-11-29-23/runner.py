@@ -75,7 +75,7 @@ if __name__ == "__main__":
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
     step = 0           
-    total_steps = 10000 # steps taken by the simulation
+    total_steps = 20000 # steps taken by the simulation
     num_entries = 1000  # number of edges or traffic lights you want to create files for
 
     # path parameters
