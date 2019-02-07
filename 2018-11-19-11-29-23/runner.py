@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
+from datetime import datetime
 
 net = sumolib.net.readNet('osm.net.xml')
 edges = net.getEdges()
@@ -75,14 +76,19 @@ if __name__ == "__main__":
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
     step = 0           
-    total_steps = 20000 # steps taken by the simulation
-    num_entries = 1000  # number of edges or traffic lights you want to create files for
+    total_steps = 50000 # steps taken by the simulation
+    num_entries = 50  # number of edges or traffic lights you want to create files for
 
     # path parameters
-    dir_name = r'\edge_data' 
+    date = datetime.now().strftime("%I-%M-%S-%B-%d-%Y")
+
+
+    # datetime(2009, 1, 6, 15, 8, 24, 78915)
+
+    dir_name = r'\edge_data' + '-' + date
     datafile_path = os.path.dirname(os.path.abspath(__file__)) + dir_name
 
-    tl_dir_name = r'\tl_data'
+    tl_dir_name = r'\tl_data' + '-' + date
     tl_datafile_path = os.path.dirname(os.path.abspath(__file__)) + tl_dir_name
 
     # Make new directories to store data for edge and traffic lights
@@ -98,8 +104,8 @@ if __name__ == "__main__":
     for step in tqdm(range(total_steps)):
         traci.simulationStep()
         if step % 5 == 0:
-            print("Step: %d / %d " % (step, total_steps))
-            print("Getting edge data...")
+            # print("Step: %d / %d " % (step, total_steps))
+            # print("Getting edge data...")
 
             # Create the data per edge
             edge_data = {}
@@ -115,7 +121,7 @@ if __name__ == "__main__":
             for index, row in edge_df[:num_entries].iterrows():
                 write_data_to_file(datafile_path, index, row, 'edge', step)
 
-            print("Getting tl data...")
+            # print("Getting tl data...")
 
             # Create the data per traffic light / junction
             tl_data = {}
