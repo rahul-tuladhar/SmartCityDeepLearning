@@ -21,50 +21,14 @@ import sumolib
 import numpy as np
 import pandas as pd
 
+from tqdm import tqdm
+
 net = sumolib.net.readNet('osm.net.xml')
 edges = net.getEdges()
 nodes = net.getNodes()
 tl = net.getTrafficLights()
 
 
-### Generating nodes_map ###
-"""
-f = open("nodes_map.txt","w")
-for node in nodes:
-    f.write(str(node.getID())+"||"+str(node.getType())+"||"+str(node.getCoord())+"||")
-    incoming = node.getIncoming()
-    outgoing = node.getOutgoing()
-    for i in incoming:
-        f.write(str(i.getID())+" ")
-    f.write("||")
-    for i in outgoing:
-        f.write(str(i.getID())+" ")
-    f.write('\n')
-f.close()
-"""
-
-### Generating traffic_light ###
-"""
-f = open("traffic_lights.txt","w")
-for t in tl:
-    f.write(str(t.getID())+"||")
-    for edge in t.getEdges():
-        f.write(str(edge.getID())+" ")
-    f.write("\n")
-f.close()
-"""
-
-### Generating edges_map ###
-"""
-f = open("edges_map.txt","w")
-for e in edges:
-    nextNodeID = e.getToNode().getID()
-    prevNodeID = e.getFromNode().getID()
-    f.write(e.getID()+'|')
-    f.write(str(net.getNode(prevNodeID).getCoord())+'|')
-    f.write(str(net.getNode(nextNodeID).getCoord())+'\n')
-f.close()
-"""
 
 def get_edge_data(edge):
     # numerical data per edge
@@ -110,36 +74,35 @@ if __name__ == "__main__":
     sumoBinary = checkBinary('sumo')
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
-    step = 0
-    total_steps = 10000
+    step = 0           
+    total_steps = 10000 # steps taken by the simulation
+    num_entries = 1000  # number of edges or traffic lights you want to create files for
 
     # path parameters
-    dir_name = '\edge_data' 
+    dir_name = r'\edge_data' 
     datafile_path = os.path.dirname(os.path.abspath(__file__)) + dir_name
 
-    tl_dir_name = '\tl_data'
+    tl_dir_name = r'\tl_data'
     tl_datafile_path = os.path.dirname(os.path.abspath(__file__)) + tl_dir_name
 
+    # Make new directories to store data for edge and traffic lights
     if not os.path.exists(datafile_path):
         os.makedirs(datafile_path)
 
     if not os.path.exists(tl_datafile_path):
         os.makedirs(tl_datafile_path)
 
-    print(datafile_path)
     print("Starting Simulation...")
 
     # Ticks for simulation
-    while step < total_steps:
+    for step in tqdm(range(total_steps)):
         traci.simulationStep()
-        step_data = []
-        num_entries = 10
-        if step % 10 == 0:
+        if step % 5 == 0:
             print("Step: %d / %d " % (step, total_steps))
-            edge_data = {}
             print("Getting edge data...")
 
             # Create the data per edge
+            edge_data = {}
             for e in edges[:num_entries]:
                 edge_id = e.getID()
                 edge_data[edge_id] = get_edge_data(e)
@@ -148,11 +111,14 @@ if __name__ == "__main__":
             edge_df.insert(0,'step', step)
             edge_df.columns = ['step', 'street_name', 'co', 'co2', 'noise', 'num_veh','ped','hc_emission','nox_emission'] 
 
+            # Write edge data files
             for index, row in edge_df[:num_entries].iterrows():
                 write_data_to_file(datafile_path, index, row, 'edge', step)
 
             print("Getting tl data...")
-            tl_data = {'t_id': ['phase', 'state', 'switch']}
+
+            # Create the data per traffic light / junction
+            tl_data = {}
             for t in tl:
                 t_id = t.getID()
                 tl_data[t_id] = get_tl_data(t)
@@ -162,7 +128,7 @@ if __name__ == "__main__":
             for index, row in tl_df[:num_entries].iterrows():
                 write_data_to_file(tl_datafile_path, index, row, 'tl', step)
 
-        step += 1
+        # step += 1
 
     traci.close()
 
