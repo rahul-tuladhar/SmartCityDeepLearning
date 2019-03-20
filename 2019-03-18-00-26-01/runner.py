@@ -64,7 +64,7 @@ def write_data_to_file(path, data_id, df, str_data_type, step):
         df.to_csv(destination_path, header=True, mode='w', index=False)
     return 
 
-def generate_data(total_steps, num_entries, traci, edges, step):
+def generate_edge_data(total_steps, num_entries, traci, edges, step):
     edge_series_data = {}
     for step in tqdm(range(total_steps)):
         traci.simulationStep()
@@ -73,12 +73,27 @@ def generate_data(total_steps, num_entries, traci, edges, step):
             for e in edges[:num_entries]:
                 edge_id = e.getID()
                 edge_data = [step] + get_edge_data(e)
-                # print("edge_data",edge_data)
                 if edge_id not in edge_series_data:
                     edge_series_data[edge_id] = [['step', 'street_name','co', 'co2', 'noise','num_veh','ped','hc_emission','nox_emission']]
                 else:
                     edge_series_data[edge_id].append(edge_data)
     return edge_series_data
+
+def generate_tl_data(total_steps, num_entries, traci, tl, step):
+    tl_series_data = {}
+    for step in tqdm(range(total_steps)):
+        traci.simulationStep()
+        if step % 5 == 0:
+            # Create the data per edge
+            for t in tl[:num_entries]:
+                tl_id = t.getID()
+                tl_data = [step] + get_tl_data(t)
+                # print("edge_data",edge_data)
+                if tl_id not in tl_series_data:
+                    tl_series_data[edge_id] = [['step', 'phase', 'state', 'switch']]
+                else:
+                    tl_series_data[edge_id].append(tl_data)
+    return tl_series_data
     
 def get_df(edge_data):
     # edge_data = 2D array of values
@@ -99,7 +114,7 @@ if __name__ == "__main__":
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
     step = 0           
-    total_steps = 100000 # steps taken by the simulation
+    total_steps = 50000 # steps taken by the simulation
     num_entries = 1000  # number of edges or traffic lights you want to create files for
     date = datetime.now().strftime("%I-%M-%S-%B-%d-%Y") # path parameter
     dir_name = r'\edge_data' + '-' + date
@@ -114,40 +129,31 @@ if __name__ == "__main__":
 
 
     # Make new directories to store data for edge and traffic lights
-    if not os.path.exists(datafile_path):
-        os.makedirs(datafile_path)
-
-    if not os.path.exists(tl_datafile_path):
-        os.makedirs(tl_datafile_path)
+   
 
     print("Starting Simulation...")
     print("Generating Edge Data...")
-    edge_series_data = generate_data(total_steps, num_entries, traci, edges, step)
+    edge_series_data = generate_edge_data(total_steps, num_entries, traci, edges, step)
+    tl_series_data = generate_tl_data(total_steps, num_entries, traci, tl, step)
+
     # print(edge_series_data)
+    if not os.path.exists(datafile_path):
+        os.makedirs(datafile_path)
 
     print("Generating Data Files...")
-
     for edge_id, edge_data in tqdm(edge_series_data.items()):
         # print("edge_data:", edge_data)
         edge_series_df = get_df(edge_data)
         write_data_to_file(datafile_path, edge_id, edge_data, 'edge', step)
 
+    if not os.path.exists(tl_datafile_path):
+        os.makedirs(tl_datafile_path)
 
-
-    # Ticks for simulation
-            # print("Getting tl data...")
-
-            # Create the data per traffic light / junction
-            # tl_data = {}
-            # for t in tl:
-            #     t_id = t.getID()
-            #     tl_data[t_id] = get_tl_data(t)
-            # tl_df = pd.DataFrame.from_dict(tl_data, orient='index')
-            # tl_df.insert(0,'step', step)
-            # tl_df.columns = ['step', 'phase', 'state', 'switch']
-            # for index, row in tl_df[:num_entries].iterrows():
-            #     write_data_to_file(tl_datafile_path, index, row, 'tl', step)
-
+    print("Generating Traffic Light Data...")
+    for tl_id, tl_data in tqdm(tl_series_data.items()):
+        # print("edge_data:", edge_data)
+        tl_series_df = get_df(tl_data)
+        write_data_to_file(datafile_path, tl_id, tl_data, 'tl', step)
 
     traci.close()
 
