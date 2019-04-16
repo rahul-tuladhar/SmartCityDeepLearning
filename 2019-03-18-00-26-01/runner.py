@@ -35,9 +35,10 @@ def get_edge_data(edge):
     noise = traci.edge.getNoiseEmission(edge_id)
     num_veh = traci.edge.getLastStepVehicleNumber(edge_id)
     ped = traci.edge.getLastStepPersonIDs(edge_id) 
+    pmx_emission = traci.edge.getPMxEmission(edge_id)
     hc_emission = traci.edge.getHCEmission(edge_id)
     nox_emission = traci.edge.getNOxEmission(edge_id)
-    data = [street_name, co, co2, noise, num_veh, ped, hc_emission, nox_emission]
+    data = [street_name, co, co2, noise, num_veh, ped, hc_emission, nox_emission, pmx_emission]
     return data
 
 def get_tl_data(tl):
@@ -73,6 +74,7 @@ def generate_edge_data(total_steps, num_entries, traci, edges, step):
             for e in edges[:num_entries]:
                 edge_id = e.getID()
                 edge_data = [step] + get_edge_data(e)
+                print(edge_id,edge_data)
                 if edge_id not in edge_series_data:
                     edge_series_data[edge_id] = [['step', 'street_name','co', 'co2', 'noise','num_veh','ped','hc_emission','nox_emission']]
                 else:
@@ -90,15 +92,16 @@ def generate_tl_data(total_steps, num_entries, traci, tl, step):
                 tl_data = [step] + get_tl_data(t)
                 # print("edge_data",edge_data)
                 if tl_id not in tl_series_data:
-                    tl_series_data[edge_id] = [['step', 'phase', 'state', 'switch']]
+                    tl_series_data[tl_id] = [['step', 'phase', 'state', 'switch']]
                 else:
-                    tl_series_data[edge_id].append(tl_data)
+                    tl_series_data[tl_id].append(tl_data)
     return tl_series_data
     
 def get_df(edge_data):
     # edge_data = 2D array of values
     # edge_df = pd.DataFrame.from_dict(edge_data, orient='index')
     edge_data = np.array(edge_data)
+    print(edge_data)
     df = pd.DataFrame(data=edge_data[1:,1:],    # values
                   index=edge_data[1:,0],    # 1st column as index
                  columns=edge_data[0,1:])  # 1st row as the column names
@@ -114,12 +117,12 @@ if __name__ == "__main__":
     sumo_cmd = [sumoBinary, "-c", "osm.sumocfg"]
     traci.start(sumo_cmd)
     step = 0           
-    total_steps = 50000 # steps taken by the simulation
-    num_entries = 1000  # number of edges or traffic lights you want to create files for
+    total_steps = 11 # steps taken by the simulation
+    num_entries = 10  # number of edges or traffic lights you want to create files for
     date = datetime.now().strftime("%I-%M-%S-%B-%d-%Y") # path parameter
-    dir_name = r'\edge_data' + '-' + date
+    dir_name = r'\edge_data' + '-'+  str(total_steps) + '-' + str(num_entries) + '' + date
     datafile_path = os.path.dirname(os.path.abspath(__file__)) + dir_name
-    tl_dir_name = r'\tl_data' + '-' + date
+    tl_dir_name = r'\tl_data' + '-' + str(total_steps) + '-' + str(num_entries)  + date
     tl_datafile_path = os.path.dirname(os.path.abspath(__file__)) + tl_dir_name
 
     net = sumolib.net.readNet('osm.net.xml')
@@ -134,17 +137,17 @@ if __name__ == "__main__":
     print("Starting Simulation...")
     print("Generating Edge Data...")
     edge_series_data = generate_edge_data(total_steps, num_entries, traci, edges, step)
-    tl_series_data = generate_tl_data(total_steps, num_entries, traci, tl, step)
 
-    # print(edge_series_data)
+    print(edge_series_data)
     if not os.path.exists(datafile_path):
         os.makedirs(datafile_path)
 
     print("Generating Data Files...")
     for edge_id, edge_data in tqdm(edge_series_data.items()):
-        # print("edge_data:", edge_data)
         edge_series_df = get_df(edge_data)
         write_data_to_file(datafile_path, edge_id, edge_data, 'edge', step)
+
+    tl_series_data = generate_tl_data(total_steps, num_entries, traci, tl, step)
 
     if not os.path.exists(tl_datafile_path):
         os.makedirs(tl_datafile_path)
